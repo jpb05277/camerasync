@@ -29,6 +29,14 @@ names and API contracts.
 
 ### Option A: Docker Compose (server + web + Postgres)
 
+#### Dev Container
+
+```bash
+docker compose up -d
+```
+
+#### Build Container
+
 ```bash
 docker compose up --build
 ```
