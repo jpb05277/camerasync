@@ -27,13 +27,53 @@ names and API contracts.
 
 ## Local development
 
-### 1. Start Postgres
+### Option A: Docker Compose (server + web + Postgres)
+
+Each service reads its config from a gitignored `.env` file, so secrets never
+land in git. Copy the templates once before the first run:
+
+```bash
+cp .env.example .env                    # shared Postgres credentials
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example apps/web/.env
+```
+
+Edit the values (e.g. `POSTGRES_PASSWORD` in the root `.env`) as needed —
+`docker-compose.yml` falls back to the dev defaults shown in `.env.example`
+if a variable isn't set.
+
+#### Dev Container
 
 ```bash
 docker compose up -d
 ```
 
-### 2. Run the server
+#### Build Container
+
+```bash
+docker compose up --build
+```
+
+This starts Postgres, the Express/Socket.IO server (hot reload via
+`node --watch`), and the Vite dev server (hot reload) together:
+
+- Server: http://localhost:4000 (health: GET /health)
+- Web: http://localhost:5173
+- Postgres: localhost:5432
+
+Source is bind-mounted into the `server` and `web` containers, so local edits
+are picked up automatically. Run `docker compose up -d --build` to run in the
+background, and `docker compose down` to stop.
+
+### Option B: Run services natively
+
+#### 1. Start Postgres
+
+```bash
+docker compose up -d db
+```
+
+#### 2. Run the server
 
 ```bash
 cd apps/server
@@ -42,15 +82,16 @@ npm install
 npm run dev          # http://localhost:4000  (health: GET /health)
 ```
 
-### 3. Run the web app
+#### 3. Run the web app
 
 ```bash
 cd apps/web
+cp .env.example .env
 npm install
 npm run dev          # http://localhost:5173
 ```
 
-### 4. Mobile (Flutter)
+### 4. Mobile startup (Flutter)
 
 Flutter isn't scaffolded yet. Once the Flutter SDK is installed:
 

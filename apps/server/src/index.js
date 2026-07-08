@@ -16,6 +16,11 @@ app.use(express.json());
 
 app.use("/health", healthRouter);
 
+// Status message for root route
+app.get("/", async (req, res) => {
+  res.status(200).json({"status": "OK"})
+})
+
 // REST routes go here as the API grows:
 //   app.use("/api/auth", authRouter);
 //   app.use("/api/groups", groupsRouter);

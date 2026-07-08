@@ -3,14 +3,59 @@ services:
     image: postgres:16-alpine
     container_name: camerasync-db
     restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
     environment:
-      POSTGRES_USER: camerasync
-      POSTGRES_PASSWORD: camerasync
-      POSTGRES_DB: camerasync
+      POSTGRES_USER: ${POSTGRES_USER:-camerasync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-camerasync}
+      POSTGRES_DB: ${POSTGRES_DB:-camerasync}
     ports:
       - "5432:5432"
     volumes:
       - camerasync-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-camerasync}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./apps/server
+    container_name: camerasync-server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: ./apps/server/.env
+        required: false
+    environment:
+      # Forced to the in-network db hostname/credentials regardless of what
+      # apps/server/.env has for native (non-docker) dev.
+      DATABASE_URL: postgres://${POSTGRES_USER:-camerasync}:${POSTGRES_PASSWORD:-camerasync}@db:5432/${POSTGRES_DB:-camerasync}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/server:/app
+      - camerasync-server-modules:/app/node_modules
+
+  web:
+    build: ./apps/web
+    container_name: camerasync-web
+    restart: unless-stopped
+    depends_on:
+      - server
+    env_file:
+      - path: ./apps/web/.env
+        required: false
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app
+      - camerasync-web-modules:/app/node_modules
 
 volumes:
   camerasync-pgdata:
+  camerasync-server-modules:
+  camerasync-web-modules:
