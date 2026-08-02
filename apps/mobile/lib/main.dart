@@ -1,4 +1,6 @@
 import 'package:camera_sync/screens/home_page.dart';
+import 'package:camera_sync/screens/enter_code_page.dart';
+import 'package:camera_sync/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -8,7 +10,11 @@ void main() {
 class CameraSyncApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: LoginPage());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.theme,
+      home: LoginPage(),
+    );
   }
 }
 
@@ -21,24 +27,23 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
- void login() {
-  if (emailController.text.isEmpty ||
-      passwordController.text.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Please fill in all fields"),
+  void login() {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please fill in all fields"),
+        ),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomePage(),
       ),
     );
-    return;
   }
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const HomePage(),
-    ),
-  );
-}
 
   @override
   Widget build(BuildContext context) {
@@ -301,7 +306,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController emailController = TextEditingController();
 
-  void resetPassword() {
+  void sendCode() {
     if (emailController.text.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -309,13 +314,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Password reset link sent to ${emailController.text}"),
+    // Moves to the 6-digit code step instead of resetting immediately,
+    // matching the 3-step Forgot Password -> Enter Code -> Reset Password flow.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnterCodePage(email: emailController.text),
       ),
     );
-
-    Navigator.pop(context);
   }
 
   @override
@@ -337,9 +343,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               const SizedBox(height: 20),
 
               const Text(
-                "Reset Your Password",
+                "Forgot Password",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.yellow,
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
@@ -348,7 +354,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               const SizedBox(height: 10),
 
               const Text(
-                "Enter your email address and we'll send you a password reset link.",
+                "Enter your email and we'll send you a code to reset your password.",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
@@ -375,13 +381,23 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: resetPassword,
+                  onPressed: sendCode,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.yellow,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text("Send Reset Link"),
+                  child: const Text("Send Code"),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "Back to Sign In",
+                  style: TextStyle(color: Colors.yellow),
                 ),
               ),
             ],
